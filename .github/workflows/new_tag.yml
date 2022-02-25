@@ -1,0 +1,36 @@
+name: New Tag
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  do-stuff:
+    name: Figure out tag stuff
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Get current tag name
+        id: current_tag
+        run: echo "::set-output name=TAGNAME::$(git describe --abbrev=0)"
+
+      - name: Get previous tag name
+        id: previous_tag
+        run: echo "::set-output name=TAGNAME::$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1))"
+
+      - name: Get next version
+        id: next_tag
+        uses: "WyriHaximus/github-action-next-semvers@v1"
+        with:
+          version: ${{ steps.current_tag.outputs.TAGNAME }}
+
+      - name: Display calculated versions
+        run: |
+          echo "Current version: ${{ steps.current_tag.outputs.TAGNAME }}"
+          echo "Previous version: ${{ steps.previous_tag.outputs.TAGNAME }}"
+          echo "Next version: ${{ steps.next_tag.outputs.patch }}"
+
